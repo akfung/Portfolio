@@ -1,6 +1,5 @@
-@import "config.scss";
-@import "menu.scss";
-@import "mobile.scss";
+@import "config.scss"; //variables, mixins, functions
+@import "menu.scss"; // menu stylings and animations
 
 * {
   box-sizing: border-box;
@@ -9,7 +8,7 @@
 body {
   @include background;
   background: $primary-color;
-  color: white;
+  color: set-text-color($primary-color);
   height: 100%;
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -33,6 +32,7 @@ h3 {
     padding: 0.2rem 1rem;
     // set background to small heading with opacity
     background: rgba(lighten($primary-color, 2), 0.5);
+    width: 100vw;
   }
 }
 
@@ -41,6 +41,7 @@ a {
   text-decoration: none;
 }
 
+//header is always on top
 header {
   position: fixed;
   z-index: 2;
@@ -53,13 +54,14 @@ header {
 
 main {
   padding: 4rem;
-  height: 100%;
+  min-height: calc(100vh - $footer-height); //calc for sticky footer
 
   .icons {
     margin-top: 1rem;
 
     a {
       padding: 0.4rem;
+      color: set-text-color($primary-color);
 
       &:hover {
         color: $secondary-color;
@@ -76,3 +78,50 @@ main {
     }
   }
 }
+
+//formating for about page
+.about-info {
+  display: grid;
+  grid-gap: 30px;
+  grid-template-areas:
+    "bioimage bio bio"
+    "job1 job2 job3";
+  grid-template-columns: repeat(3, 1fr);
+
+  //assign divs to grid areas
+  .bio {
+    grid-area: bio;
+  }
+
+  .job-1 {
+    grid-area: job1;
+  }
+  .job-2 {
+    grid-area: job2;
+  }
+
+  .job {
+    background: lighten($primary-color, 5);
+    padding: 0.5rem;
+    border-top: $secondary-color 5px solid;
+  }
+
+  //set the bio image format
+  .bio-image {
+    grid-area: bioimage;
+    margin: auto;
+    border-radius: 50%;
+    border: $secondary-color 3px solid;
+  }
+}
+
+// footer settings. height variable in _config.scss
+#main-footer {
+  text-align: center;
+  padding: 1rem;
+  background: darken($primary-color, 5);
+  color: set-text-color($primary-color);
+  height: $footer-height;
+}
+
+@import "mobile.scss"; //media queries for different view sizes

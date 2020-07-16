@@ -13,11 +13,11 @@
     width: 28px;
     height: 3px;
     margin: 0 0 5px 0;
-    background: white;
+    background: set-text-color($primary-color);
     @include ease-out;
   }
 
-  // rotate menu icon animation
+  // menu icon rotation animation
   &.close {
     transform: rotate(180deg);
 
@@ -38,7 +38,7 @@
   }
 }
 
-//overlay initial state hidden, shows with show class
+//overlay initial state hidden, displays after adding show class
 .menu {
   position: fixed;
   top: 0;
@@ -62,28 +62,33 @@
     overflow: hidden;
   }
 
-  //initial hidden state of nav bar is above the view, animate to fly in from top
+  //initial hidden state of nav bar smaller, becomes opaque and larger after show
   &-nav {
     margin: 0;
     padding: 0;
     background: rgba(darken($primary-color, 5), 0.8);
     list-style: none;
-    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+    transform: scale(0.8, 0.8);
+
     @include ease-out;
 
     &.show {
-      transform: translate3d(0, 0%, 0);
+      opacity: 1;
+      transform: scale(1, 1);
     }
   }
 
   //initial hidden state of branding and profile image is below
   &-branding {
     background: rgba($primary-color, 0.8);
-    transform: translate3d(0, 100%, 0);
+    transform: scale(0.8, 0.8);
+    opacity: 0;
     @include ease-out;
 
     &.show {
-      transform: translate3d(0, 0%, 0);
+      transform: scale(1, 1);
+      opacity: 1;
     }
 
     //profile image stylings with border
@@ -97,12 +102,14 @@
     }
   }
 
-  //initial state of nav items is off screen to the right
+  //nav items grow in size for transition
   .nav-item {
-    transform: translate3d(600px, 0, 0);
-    @include ease-out;
+    opacity: 0;
+    transform: scale(0.7, 0.7);
+    @include ease-transition;
     &.show {
-      transform: translate3d(0, 0, 0);
+      opacity: 1;
+      transform: scale(1, 1);
     }
 
     //current page highlighted with color
@@ -118,7 +125,7 @@
       text-transform: uppercase;
       padding: 1rem 0;
       font-weight: 300;
-      color: white;
+      color: set-text-color($primary-color);
 
       //highlight options on hover
       &:hover {

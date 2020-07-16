@@ -1,10 +1,11 @@
 // variables and mixin transitions
 
-$primary-color: #444;
-$secondary-color: #eece1a;
+$primary-color: #333333;
+$secondary-color: #0099ff;
 $show-home-image: true;
 $home-image: url(../img/background.jpg);
 $background-opacity: 0.7;
+$footer-height: 40px;
 
 @mixin background {
   @if $show-home-image {
@@ -27,8 +28,21 @@ $background-opacity: 0.7;
   }
 }
 
+//function for setting text color depending on primary color lightness or darnkess
+@function set-text-color($color) {
+  @if (lightness($color) > 40) {
+    @return black;
+  } @else {
+    @return white;
+  }
+}
+
 @mixin ease-out {
   transition: all 0.3s ease-out;
+}
+
+@mixin ease-transition {
+  transition: all 0.3s ease;
 }
 
 //media querries inside mixins
