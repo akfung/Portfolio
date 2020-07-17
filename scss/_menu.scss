@@ -76,6 +76,7 @@
     &.show {
       opacity: 1;
       transform: scale(1, 1);
+      @include ease-out;
     }
   }
 
@@ -89,6 +90,7 @@
     &.show {
       transform: scale(1, 1);
       opacity: 1;
+      @include ease-out;
     }
 
     //profile image stylings with border
@@ -126,6 +128,7 @@
       padding: 1rem 0;
       font-weight: 300;
       color: set-text-color($primary-color);
+      @include ease-out;
 
       //highlight options on hover
       &:hover {
@@ -138,6 +141,10 @@
 //for loop for delaying each nav-link slide in for cascade effect
 @for $x from 1 through 4 {
   .nav-item:nth-child(#{$x}) {
+    transition-delay: $x * 0.1s;
+  }
+
+  .nav-item:show:nth-child(#{$x}) {
     transition-delay: $x * 0.1s;
   }
 }

@@ -5,7 +5,6 @@ $secondary-color: #0099ff;
 $show-home-image: true;
 $home-image: url(../img/background.jpg);
 $background-opacity: 0.7;
-$footer-height: 40px;
 
 @mixin background {
   @if $show-home-image {

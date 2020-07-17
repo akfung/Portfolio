@@ -54,7 +54,7 @@ header {
 
 main {
   padding: 4rem;
-  min-height: calc(100vh - $footer-height); //calc for sticky footer
+  min-height: calc(100vh - 40px); //calc for sticky footer
 
   .icons {
     margin-top: 1rem;
@@ -115,13 +115,81 @@ main {
   }
 }
 
+.projects {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 2rem;
+
+  img {
+    width: 100%;
+    height: 33vh;
+    border-radius: 5vh;
+    @include ease-out;
+
+    &:hover {
+      transform: scale(1.05, 1.05);
+      @include ease-out;
+    }
+  }
+}
+
+//contact page
+.boxes {
+  display: block;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 1rem;
+
+  div {
+    font-size: 2rem;
+    padding: 1.5rem 2.5rem;
+    margin-bottom: 3rem;
+    @include ease-out;
+
+    &:hover {
+      @include ease-out;
+      transform: scale(1.1, 1.1);
+      background: $primary-color;
+      color: set-text-color($secondary-color);
+    }
+  }
+}
+
+//button styles and hover animation
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 5vh;
+  border: 0;
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+
+  &:hover {
+    background: $secondary-color;
+    color: set-text-color($secondary-color);
+  }
+}
+
+//extend btn class
+.btn-dark {
+  @extend .btn;
+  background: darken($primary-color, 30);
+  color: white;
+}
+
+.btn-light {
+  @extend .btn;
+  background: lighten($primary-color, 30);
+  color: black;
+}
+
 // footer settings. height variable in _config.scss
 #main-footer {
   text-align: center;
   padding: 1rem;
   background: darken($primary-color, 5);
   color: set-text-color($primary-color);
-  height: $footer-height;
+  height: 40px;
 }
 
 @import "mobile.scss"; //media queries for different view sizes
