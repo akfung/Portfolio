@@ -32,7 +32,6 @@ h3 {
     padding: 0.2rem 1rem;
     // set background to small heading with opacity
     background: rgba(lighten($primary-color, 2), 0.5);
-    width: 100vw;
   }
 }
 
@@ -119,6 +118,15 @@ main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-gap: 2rem;
+
+  // center text for project tiles and descriptions
+  .item {
+    h2,
+    p {
+      text-align: center;
+      height: 10rem;
+    }
+  }
 
   img {
     width: 100%;

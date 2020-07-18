@@ -4,10 +4,24 @@
 @include mediaXl {
   .projects {
     grid-template-columns: repeat(4, 1fr);
+    .item {
+      h2,
+      p {
+        height: 6rem;
+      }
+    }
   }
 }
 //desktops and laptops
 @include mediaLg {
+  .projects {
+    .item {
+      h2,
+      p {
+        height: 6rem;
+      }
+    }
+  }
 }
 //tablets
 @include mediaMd {
@@ -58,6 +72,12 @@
 
   .projects {
     grid-template-columns: repeat(2, 1fr);
+    .item {
+      h2,
+      p {
+        height: 9rem;
+      }
+    }
   }
 }
 //phones
