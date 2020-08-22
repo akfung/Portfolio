@@ -263,17 +263,18 @@ main {
     grid-template-columns: repeat(4, 1fr); }
     .projects .item h2,
     .projects .item p {
-      height: 6rem; } }
+      height: 8rem; } }
 
 @media screen and (min-width: 769px) and (max-width: 1170px) {
   .projects .item h2,
   .projects .item p {
-    height: 6rem; } }
+    height: 10rem; } }
 
 @media screen and (max-width: 768px) {
   main {
     align-items: center;
-    text-align: center; }
+    text-align: center;
+    padding: 1rem; }
     main .lg-heading {
       line-height: 1;
       margin-bottom: 1rem; }
@@ -297,7 +298,7 @@ main {
     grid-template-columns: repeat(2, 1fr); }
     .projects .item h2,
     .projects .item p {
-      height: 9rem; } }
+      height: 10rem; } }
 
 @media screen and (max-width: 500px) {
   main#home h1 {
