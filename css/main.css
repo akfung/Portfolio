@@ -216,6 +216,18 @@ main {
       transform: scale(1.05, 1.05);
       transition: all 0.3s ease-out; }
 
+.embedded-hf-frame {
+  width: 90vw;
+  height: 90vh;
+  align-items: center;
+  margin-top: 3vh;
+  margin-bottom: 2vh
+}
+
+.project-item {
+  margin-bottom: 5vh;
+}
+
 .boxes {
   display: block;
   justify-content: space-evenly;
@@ -248,8 +260,8 @@ main {
   color: white; }
 
 .btn-light {
-  background: gray;
-  color: black; }
+  background: black;
+  color: white; }
 
 #main-footer {
   text-align: center;
