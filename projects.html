@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Projects</title>
+    <!-- fontawesome cdn -->
+    <script
+      src="https://kit.fontawesome.com/7b0693a9be.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <header>
+      <div class="menu-btn">
+        <div class="btn-line"></div>
+        <div class="btn-line"></div>
+        <div class="btn-line"></div>
+      </div>
+
+      <nav class="menu">
+        <div class="menu-branding">
+          <div class="portrait"></div>
+        </div>
+
+        <ul class="menu-nav">
+          <li class="nav-item">
+            <div class="nav-link">amoskfung@gmail.com</div>
+          </li>
+
+          <li class="nav-item">
+            <div class="nav-link">
+              (408) 982-6845
+            </div>
+          </li>
+          <li class="nav-item">
+            <a href="index.html" class="nav-link">
+              Home
+            </a>
+          </li>
+          <li class="nav-item current">
+            <a href="projects.html" class="nav-link">
+              Projects
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="work">
+      <h1 class="lg-heading">
+        <span class="text-secondary">Projects</span>
+      </h1>
+      <div class="project-item">
+        <h2 class="proj-title">
+          Supreme Court Opinion Prediction
+        </h2>
+        <p class="proj-description">
+          In the leadup to many US Supreme Court cases, there is sometimes consensus on the expected rulings, which seem to be based on the existing rulings made by the court and Its Justices. Predictions based on existing and publicly accessible text? Sounds like a deep learning project! This is a rudimentary attempt at predicting the Supreme Court’s ruling on a case when provided a brief overview of the case.
+        </p>
+        <a href="#!">
+          <iframe
+          class="embedded-hf-frame"
+          src="https://akfung-phoenix-byte.hf.space"
+          frameborder="0">
+          </iframe>
+        </a>
+
+        <a class="btn-light" href="https://huggingface.co/spaces/akfung/phoenix-byte">
+          <i class="fas fa-eye"> Project</i>
+        </a>
+        <a class="btn-dark" href="https://github.com/akfung/phoenix-byte">
+          <i class="fab fa-github"> Github</i>
+        </a>
+      </div>
+
+      <div class="project-item">
+        <h2 class="proj-title">Low Income Comorbidities</h2>
+        <p class="proj-description">
+          A D3.js project for a DOM manipulation based visualization of the
+          several health outcomes of low income households.
+        </p>
+        <a href="https://akfung.github.io/low-income-visualization/"">
+          <img class="embedded-hf-frame" src="img/projects/d3_project.png" alt="d3_project" />
+        </a>
+
+        <a
+          class="btn-light"
+          href="https://akfung.github.io/low-income-visualization/"
+        >
+          <i class="fas fa-eye"> Project</i>
+        </a>
+        <a
+          class="btn-dark"
+          href="https://github.com/akfung/low-income-visualization"
+        >
+          <i class="fab fa-github"> Github</i>
+        </a>
+      </div>
+
+      
+    </main>
+
+    <footer id="main-footer">
+      Last Updated December 2023
+    </footer>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
