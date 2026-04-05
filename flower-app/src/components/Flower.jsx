@@ -18,6 +18,59 @@ const PETALS = [
 
 const PETAL_COLORS = ['#e06c75', '#e5a35a', '#d4b44a', '#56b06c', '#4a9fd4', '#9b7fd4']
 
+function ThemeToggle({ isDark, onClick, iconX, iconY }) {
+  const R = 20
+  const sunColor = '#FDB813'
+  const moonColor = '#C8C8FF'
+  const rayInner = R + 5
+  const rayOuter = R + 12
+
+  const rays = Array.from({ length: 8 }, (_, i) => {
+    const a = i * 45 * Math.PI / 180
+    return {
+      x1: Math.cos(a) * rayInner, y1: Math.sin(a) * rayInner,
+      x2: Math.cos(a) * rayOuter,  y2: Math.sin(a) * rayOuter,
+    }
+  })
+
+  return (
+    <g transform={`translate(${iconX}, ${iconY})`} onClick={onClick} style={{ cursor: 'pointer' }}>
+      <defs>
+        {/* Cutout circle shifted right creates a left-facing crescent */}
+        <mask id="moonMask">
+          <rect x={-R - 2} y={-R - 2} width={(R + 2) * 2} height={(R + 2) * 2} fill="white" />
+          <circle cx={R * 0.38} cy={-R * 0.1} r={R * 0.82} fill="black" />
+        </mask>
+      </defs>
+
+      {/* Large transparent click target */}
+      <circle cx={0} cy={0} r={rayOuter + 4} fill="transparent" />
+
+      {/* Sun rays */}
+      <g style={{
+        opacity: isDark ? 0 : 1,
+        transform: isDark ? 'rotate(30deg) scale(0.6)' : 'rotate(0deg) scale(1)',
+        transformBox: 'fill-box',
+        transformOrigin: 'center',
+        transition: 'opacity 0.45s ease, transform 0.55s ease',
+      }}>
+        {rays.map((ray, i) => (
+          <line key={i} x1={ray.x1} y1={ray.y1} x2={ray.x2} y2={ray.y2}
+            stroke={sunColor} strokeWidth={3} strokeLinecap="round" />
+        ))}
+      </g>
+
+      {/* Sun body */}
+      <circle cx={0} cy={0} r={R} fill={sunColor}
+        style={{ opacity: isDark ? 0 : 1, transition: 'opacity 0.4s ease' }} />
+
+      {/* Moon body (crescent via mask) */}
+      <circle cx={0} cy={0} r={R} fill={moonColor} mask="url(#moonMask)"
+        style={{ opacity: isDark ? 1 : 0, transition: 'opacity 0.4s ease' }} />
+    </g>
+  )
+}
+
 function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave }) {
   const [hovered, setHovered] = useState(false)
 
@@ -148,6 +201,7 @@ function splitText(text, maxLen = 22) {
 export default function Flower() {
   const [svgSize, setSvgSize] = useState(DEFAULT_SVG_SIZE)
   const [hoveredPetal, setHoveredPetal] = useState(null)
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     const updateSize = () => {
@@ -175,17 +229,32 @@ export default function Flower() {
           <stop offset="0%" stopColor="#ffe566" />
           <stop offset="100%" stopColor="#f0a500" />
         </radialGradient>
-        <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
-          <stop offset="0%" stopColor="#1a1a2e" />
-          <stop offset="100%" stopColor="#0d0d1a" />
-        </radialGradient>
+        {/* Day sky: deep blue at top fading to pale horizon */}
+        <linearGradient id="dayGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#3a8fc7" />
+          <stop offset="55%"  stopColor="#74bde0" />
+          <stop offset="100%" stopColor="#b8dff0" />
+        </linearGradient>
+        {/* Night sky: deep navy at top fading to dark indigo */}
+        <linearGradient id="nightGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#02051a" />
+          <stop offset="55%"  stopColor="#060d38" />
+          <stop offset="100%" stopColor="#0d1a5c" />
+        </linearGradient>
         <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.4)" />
         </filter>
       </defs>
 
-      {/* Background */}
-      <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#bgGrad)" />
+      {/* Day sky background (always underneath) */}
+      <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#dayGrad)" />
+      {/* Night sky — wipes in from left when isDark, retreats right when not */}
+      <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#nightGrad)"
+        style={{
+          clipPath: isDark ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
+          transition: 'clip-path 0.8s ease-in-out',
+        }}
+      />
 
       {/* Stem */}
       <rect
@@ -262,6 +331,14 @@ export default function Flower() {
           </g>
         )
       })()}
+
+      {/* Sun / Moon toggle — top right corner */}
+      <ThemeToggle
+        isDark={isDark}
+        onClick={() => setIsDark(d => !d)}
+        iconX={SVG_SIZE - 55}
+        iconY={55}
+      />
 
     </svg>
   )
