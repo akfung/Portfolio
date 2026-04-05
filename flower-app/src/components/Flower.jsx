@@ -71,7 +71,7 @@ function ThemeToggle({ isDark, onClick, iconX, iconY }) {
   )
 }
 
-function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave }) {
+function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave, isDark }) {
   const [hovered, setHovered] = useState(false)
 
   const handleEnter = () => { setHovered(true);  onHover({ label, shortDesc, fullDesc }) }
@@ -118,10 +118,10 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
       >
         <path
           d={petalPath}
-          fill="#FFFFFF"
-          stroke="white"
+          fill={isDark ? '#c8c8c8' : '#FFFFFF'}
+          stroke={isDark ? '#c8c8c8' : 'white'}
           strokeWidth={1.5}
-          opacity={1}
+          style={{ transition: 'fill 0.8s ease-in-out, stroke 0.8s ease-in-out' }}
         />
 
         <text
@@ -202,6 +202,12 @@ export default function Flower() {
   const [svgSize, setSvgSize] = useState(DEFAULT_SVG_SIZE)
   const [hoveredPetal, setHoveredPetal] = useState(null)
   const [isDark, setIsDark] = useState(false)
+  const [hasClickedTheme, setHasClickedTheme] = useState(false)
+
+  const handleThemeClick = () => {
+    setIsDark(d => !d)
+    setHasClickedTheme(true)
+  }
 
   useEffect(() => {
     const updateSize = () => {
@@ -248,11 +254,22 @@ export default function Flower() {
 
       {/* Day sky background (always underneath) */}
       <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#dayGrad)" />
-      {/* Night sky — wipes in from left when isDark, retreats right when not */}
+      {/* Night sky — sweeps top-to-bottom with a gradient blend at the wipe front.
+          The mask is 3× the element height: top third = transparent (hidden),
+          middle third = gradient blend, bottom third = black (fully shown).
+          Animating mask-position from 0% (transparent over element) to 100%
+          (black over element) moves the blend band through the screen. */}
       <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#nightGrad)"
         style={{
-          clipPath: isDark ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
-          transition: 'clip-path 0.8s ease-in-out',
+          maskImage:          'linear-gradient(to bottom, transparent 0%, transparent 40%, black 60%, black 100%)',
+          maskSize:           '100% 300%',
+          maskRepeat:         'no-repeat',
+          maskPosition:       `0% ${isDark ? '100%' : '0%'}`,
+          WebkitMaskImage:    'linear-gradient(to bottom, transparent 0%, transparent 40%, black 60%, black 100%)',
+          WebkitMaskSize:     '100% 300%',
+          WebkitMaskRepeat:   'no-repeat',
+          WebkitMaskPosition: `0% ${isDark ? '100%' : '0%'}`,
+          transition:         'mask-position 0.8s ease-in-out, -webkit-mask-position 0.8s ease-in-out',
         }}
       />
 
@@ -282,6 +299,7 @@ export default function Flower() {
           cy={CY}
           onHover={setHoveredPetal}
           onLeave={() => setHoveredPetal(null)}
+          isDark={isDark}
         />
       ))}
 
@@ -290,9 +308,10 @@ export default function Flower() {
         cx={CX}
         cy={CY}
         r={CENTER_R}
-        fill="#FFE35E"
-        stroke="white"
+        fill={isDark ? '#c49a00' : '#FFE35E'}
+        stroke={isDark ? '#c49a00' : 'white'}
         strokeWidth={1.5}
+        style={{ transition: 'fill 0.8s ease-in-out, stroke 0.8s ease-in-out' }}
       />
 
       {/* Center text — shown when a petal is hovered */}
@@ -332,10 +351,41 @@ export default function Flower() {
         )
       })()}
 
+      {/* "Click" hint — hidden after first theme click */}
+      {!hasClickedTheme && (() => {
+        const hintColor = isDark ? '#d4d4ff' : '#1a3a5c'
+        const ix = SVG_SIZE - 80  // icon center x
+        const iy = 55              // icon center y
+        const arrowTipX  = ix - 35 // just clears the sun rays
+        const arrowTailX = arrowTipX - 22
+        const textX      = arrowTailX - 8
+        return (
+          <g className="theme-hint">
+            <text x={textX} y={iy + 5} textAnchor="end"
+              fontSize={15} fontWeight="600"
+              fill={hintColor}
+              style={{ transition: 'fill 0.8s ease-in-out' }}
+            >
+            </text>
+            {/* Arrow shaft */}
+            <line x1={arrowTailX} y1={iy} x2={arrowTipX} y2={iy}
+              stroke={hintColor} strokeWidth={5} strokeLinecap="round"
+              style={{ transition: 'stroke 0.8s ease-in-out' }}
+            />
+            {/* Arrowhead */}
+            <path d={`M ${arrowTipX - 7} ${iy - 5} L ${arrowTipX} ${iy} L ${arrowTipX - 7} ${iy + 5}`}
+              fill="none" stroke={hintColor} strokeWidth={5}
+              strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: 'stroke 0.8s ease-in-out' }}
+            />
+          </g>
+        )
+      })()}
+
       {/* Sun / Moon toggle — top right corner */}
       <ThemeToggle
         isDark={isDark}
-        onClick={() => setIsDark(d => !d)}
+        onClick={handleThemeClick}
         iconX={SVG_SIZE - 55}
         iconY={55}
       />

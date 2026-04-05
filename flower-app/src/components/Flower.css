@@ -14,3 +14,15 @@
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
+
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+
+.theme-hint {
+  animation: floatUpDown 2.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
