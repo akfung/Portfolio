@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import './Flower.css'
 
 const DEFAULT_SVG_SIZE = 800
-const CENTER_R = 200
-const PETAL_LEN = 145
-const PETAL_W = 100
-const SEMI_R = PETAL_W / 2
+// Base geometry at 800px — all values scale proportionally via the `scale` prop
+const BASE_CENTER_R  = 150   // 200 × 0.75
+const BASE_PETAL_LEN = 109   // 145 × 0.75
+const BASE_PETAL_W   = 75    // 100 × 0.75
 
 const PETALS = [
   { angle: 0,   label: 'About',    shortDesc: 'Who I am',         petalDesc: 'MLE',         fullDesc: `` },
@@ -18,12 +18,12 @@ const PETALS = [
 
 const PETAL_COLORS = ['#e06c75', '#e5a35a', '#d4b44a', '#56b06c', '#4a9fd4', '#9b7fd4']
 
-function ThemeToggle({ isDark, onClick, iconX, iconY }) {
-  const R = 20
+function ThemeToggle({ isDark, onClick, iconX, iconY, scale = 1 }) {
+  const R = Math.max(12, Math.round(20 * scale))
   const sunColor = '#FDB813'
   const moonColor = '#C8C8FF'
-  const rayInner = R + 5
-  const rayOuter = R + 12
+  const rayInner = R + Math.round(5 * scale)
+  const rayOuter = R + Math.round(12 * scale)
 
   const rays = Array.from({ length: 8 }, (_, i) => {
     const a = i * 45 * Math.PI / 180
@@ -71,17 +71,38 @@ function ThemeToggle({ isDark, onClick, iconX, iconY }) {
   )
 }
 
-function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave, isDark }) {
-  const [hovered, setHovered] = useState(false)
+function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave, isDark, scale, centerR, petalLen, petalW }) {
+  const [hovered, setHovered] = useState(false)  // mouse hover (desktop)
+  const [tapped,  setTapped]  = useState(false)  // tap toggle (mobile)
 
-  const handleEnter = () => { setHovered(true);  onHover({ label, shortDesc, fullDesc }) }
-  const handleLeave = () => { setHovered(false); onLeave() }
+  const isOut = hovered || tapped
 
-  const popOut = hovered ? 60 : -150
+  // Desktop: pointer enter/leave drives hover
+  const handlePointerEnter = (e) => {
+    if (e.pointerType !== 'mouse') return
+    setHovered(true)
+    onHover({ label, shortDesc, fullDesc })
+  }
+  const handlePointerLeave = (e) => {
+    if (e.pointerType !== 'mouse') return
+    setHovered(false)
+    if (!tapped) onLeave()
+  }
+  // Mobile: tap toggles the popped state
+  const handleClick = (e) => {
+    if (e.pointerType !== 'touch') return
+    const next = !tapped
+    setTapped(next)
+    if (next) onHover({ label, shortDesc, fullDesc })
+    else onLeave()
+  }
+
+  const s = scale
+  const popOut = isOut ? Math.round(25 * s) : Math.round(-130 * s)
 
   const innerY = 0
-  const outerY = -(CENTER_R + PETAL_LEN)
-  const hw = PETAL_W / 1
+  const outerY = -(centerR + petalLen)
+  const hw     = petalW
 
   const petalPath = [
     `M ${-hw} ${innerY}`,
@@ -91,18 +112,21 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
     `Z`,
   ].join(' ')
 
-  const arcId = `arc-${id}`
+  const arcId    = `arc-${id}`
   const isBottom = angle > 90 && angle < 270
 
-  const spanDeg = 70
-  const fontSize = 28
-  const topArcD    = petalTipArcD(outerY + 35, hw, spanDeg)
-  const bottomArcD = petalTipArcD(outerY - fontSize + 35, hw, spanDeg, true)
+  const spanDeg    = 70
+  const labelSize  = Math.round(28 * s)
+  const arcOffset  = Math.round(35 * s)
+  const topArcD    = petalTipArcD(outerY + arcOffset, hw, spanDeg)
+  const bottomArcD = petalTipArcD(outerY - labelSize + arcOffset, hw, spanDeg, true)
 
-  const descLines = splitText(petalDesc)
-
-  const shortDescY = -330
-  const fullDescStartY = shortDescY + 20
+  const descLines      = splitText(petalDesc)
+  // Anchor text positions to centerR so they stay hidden inside the
+  // circle at rest (translateY +100s) and clear it when popped (translateY -25s)
+  const shortDescY     = -(centerR + Math.round(50 * s))
+  const fullDescStartY = shortDescY + Math.round(20 * s)
+  const lineHeight     = Math.round(18 * s)
 
   return (
     <g transform={`translate(${cx}, ${cy}) rotate(${angle})`}>
@@ -113,19 +137,20 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
       <g
         className="petal-group"
         style={{ '--pop': `${-popOut}px` }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onClick={handleClick}
       >
         <path
           d={petalPath}
           fill={isDark ? '#c8c8c8' : '#FFFFFF'}
           stroke={isDark ? '#c8c8c8' : 'white'}
-          strokeWidth={1.5}
+          strokeWidth={Math.max(1, 1.5 * s)}
           style={{ transition: 'fill 0.8s ease-in-out, stroke 0.8s ease-in-out' }}
         />
 
         <text
-          fontSize={28}
+          fontSize={labelSize}
           fill="#000000"
           fontWeight="700"
           letterSpacing="0.5"
@@ -140,7 +165,7 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
           y={shortDescY}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={16}
+          fontSize={Math.round(16 * s)}
           fill="#000000"
           fontWeight="600"
           transform={isBottom ? `translate(0, ${shortDescY}) rotate(180) translate(0, ${-shortDescY})` : ''}
@@ -149,14 +174,14 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
         </text>
 
         {descLines.map((line, i) => {
-          const lineY = fullDescStartY + (i * 18)
+          const lineY = fullDescStartY + (i * lineHeight)
           return (
             <text
               key={i}
               y={lineY}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize={14}
+              fontSize={Math.round(14 * s)}
               fill="#000000"
               fontWeight="500"
               transform={isBottom ? `translate(0, ${lineY}) rotate(180) translate(0, ${-lineY})` : ''}
@@ -199,7 +224,8 @@ function splitText(text, maxLen = 22) {
 }
 
 export default function Flower() {
-  const [svgSize, setSvgSize] = useState(DEFAULT_SVG_SIZE)
+  const [svgW, setSvgW] = useState(window.innerWidth)
+  const [svgH, setSvgH] = useState(window.innerHeight)
   const [hoveredPetal, setHoveredPetal] = useState(null)
   const [isDark, setIsDark] = useState(false)
   const [hasClickedTheme, setHasClickedTheme] = useState(false)
@@ -211,23 +237,27 @@ export default function Flower() {
 
   useEffect(() => {
     const updateSize = () => {
-      const size = Math.min(window.innerWidth, window.innerHeight) * 0.95
-      setSvgSize(Math.max(size, DEFAULT_SVG_SIZE))
+      setSvgW(window.innerWidth)
+      setSvgH(window.innerHeight)
     }
-    updateSize()
     window.addEventListener('resize', updateSize)
     return () => window.removeEventListener('resize', updateSize)
   }, [])
 
-  const SVG_SIZE = svgSize
-  const CX = SVG_SIZE / 2
-  const CY = SVG_SIZE / 2 - 20  // shift center up a bit for the stem
+  // Scale all geometry proportionally to the smaller viewport dimension
+  const SVG_SIZE = Math.min(svgW, svgH)
+  const scale    = SVG_SIZE / DEFAULT_SVG_SIZE
+  const CENTER_R = Math.round(BASE_CENTER_R * scale)
+  const PETAL_LEN = Math.round(BASE_PETAL_LEN * scale)
+  const PETAL_W   = Math.round(BASE_PETAL_W   * scale)
+  const CX = svgW / 2
+  const CY = svgH / 2 - Math.round(20 * scale)
 
   return (
     <svg
-      width={SVG_SIZE}
-      height={SVG_SIZE + 60}
-      viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE + 60}`}
+      width={svgW}
+      height={svgH}
+      viewBox={`0 0 ${svgW} ${svgH}`}
       className="flower-svg"
     >
       <defs>
@@ -253,13 +283,9 @@ export default function Flower() {
       </defs>
 
       {/* Day sky background (always underneath) */}
-      <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#dayGrad)" />
-      {/* Night sky — sweeps top-to-bottom with a gradient blend at the wipe front.
-          The mask is 3× the element height: top third = transparent (hidden),
-          middle third = gradient blend, bottom third = black (fully shown).
-          Animating mask-position from 0% (transparent over element) to 100%
-          (black over element) moves the blend band through the screen. */}
-      <rect width={SVG_SIZE} height={SVG_SIZE + 60} fill="url(#nightGrad)"
+      <rect width={svgW} height={svgH} fill="url(#dayGrad)" />
+      {/* Night sky — sweeps top-to-bottom with a gradient blend at the wipe front. */}
+      <rect width={svgW} height={svgH} fill="url(#nightGrad)"
         style={{
           maskImage:          'linear-gradient(to bottom, transparent 0%, transparent 40%, black 60%, black 100%)',
           maskSize:           '100% 300%',
@@ -278,7 +304,7 @@ export default function Flower() {
         x={CX - 9}
         y={CY + CENTER_R - 2}
         width={18}
-        height={SVG_SIZE + 60 - (CY + CENTER_R) - 10}
+        height={svgH - (CY + CENTER_R) - 10}
         fill="#3a7d44"
         rx={4}
       />
@@ -300,6 +326,10 @@ export default function Flower() {
           onHover={setHoveredPetal}
           onLeave={() => setHoveredPetal(null)}
           isDark={isDark}
+          scale={scale}
+          centerR={CENTER_R}
+          petalLen={PETAL_LEN}
+          petalW={PETAL_W}
         />
       ))}
 
@@ -316,23 +346,12 @@ export default function Flower() {
 
       {/* Center text — shown when a petal is hovered */}
       {hoveredPetal && (() => {
-        const labelY    = CY - CENTER_R + 36
-        const descStartY = labelY + 32
-        const lineHeight = 18
+        const labelY     = CY - CENTER_R + Math.round(36 * scale)
+        const descStartY = labelY + Math.round(32 * scale)
+        const lineHeight = Math.round(18 * scale)
         const descLines  = splitText(hoveredPetal.fullDesc, 33)
         return (
           <g>
-            {/* <text */}
-            {/*   x={CX} */}
-            {/*   y={labelY} */}
-            {/*   textAnchor="middle" */}
-            {/*   dominantBaseline="middle" */}
-            {/*   fontSize={22} */}
-            {/*   fontWeight="700" */}
-            {/*   fill="#1a1a2e" */}
-            {/* > */}
-            {/*   {hoveredPetal.label} */}
-            {/* </text> */}
             {descLines.map((line, i) => (
               <text
                 key={i}
@@ -340,7 +359,7 @@ export default function Flower() {
                 y={descStartY + i * lineHeight}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize={18}
+                fontSize={Math.round(18 * scale)}
                 fontWeight="500"
                 fill="#1a1a2e"
               >
@@ -354,27 +373,27 @@ export default function Flower() {
       {/* "Click" hint — hidden after first theme click */}
       {!hasClickedTheme && (() => {
         const hintColor = isDark ? '#d4d4ff' : '#1a3a5c'
-        const ix = SVG_SIZE - 80  // icon center x
-        const iy = 55              // icon center y
-        const arrowTipX  = ix - 35 // just clears the sun rays
-        const arrowTailX = arrowTipX - 22
-        const textX      = arrowTailX - 8
+        const ix = svgW - Math.round(80 * scale)
+        const iy = Math.round(55 * scale)
+        const arrowTipX  = ix - Math.round(35 * scale)
+        const arrowTailX = arrowTipX - Math.round(22 * scale)
+        const textX      = arrowTailX - Math.round(8 * scale)
         return (
           <g className="theme-hint">
-            <text x={textX} y={iy + 5} textAnchor="end"
-              fontSize={15} fontWeight="600"
+            <text x={textX} y={iy + Math.round(5 * scale)} textAnchor="end"
+              fontSize={Math.round(15 * scale)} fontWeight="600"
               fill={hintColor}
               style={{ transition: 'fill 0.8s ease-in-out' }}
             >
             </text>
             {/* Arrow shaft */}
             <line x1={arrowTailX} y1={iy} x2={arrowTipX} y2={iy}
-              stroke={hintColor} strokeWidth={5} strokeLinecap="round"
+              stroke={hintColor} strokeWidth={Math.max(1.5, 3 * scale)} strokeLinecap="round"
               style={{ transition: 'stroke 0.8s ease-in-out' }}
             />
             {/* Arrowhead */}
-            <path d={`M ${arrowTipX - 7} ${iy - 5} L ${arrowTipX} ${iy} L ${arrowTipX - 7} ${iy + 5}`}
-              fill="none" stroke={hintColor} strokeWidth={5}
+            <path d={`M ${arrowTipX - Math.round(7 * scale)} ${iy - Math.round(5 * scale)} L ${arrowTipX} ${iy} L ${arrowTipX - Math.round(7 * scale)} ${iy + Math.round(5 * scale)}`}
+              fill="none" stroke={hintColor} strokeWidth={Math.max(1.5, 3 * scale)}
               strokeLinecap="round" strokeLinejoin="round"
               style={{ transition: 'stroke 0.8s ease-in-out' }}
             />
@@ -386,8 +405,9 @@ export default function Flower() {
       <ThemeToggle
         isDark={isDark}
         onClick={handleThemeClick}
-        iconX={SVG_SIZE - 55}
-        iconY={55}
+        iconX={svgW - Math.round(55 * scale)}
+        iconY={Math.round(55 * scale)}
+        scale={scale}
       />
 
     </svg>
