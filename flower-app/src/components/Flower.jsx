@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './Flower.css'
 
 const DEFAULT_SVG_SIZE = 800
+const STAR_COUNT = 80   // ← adjust to change how many stars appear in the night sky
+const BIRD_COUNT = 12   // ← adjust to change how many birds appear in the day sky
 // Base geometry at 800px — all values scale proportionally via the `scale` prop
 const BASE_CENTER_R  = 150   // 200 × 0.75
 const BASE_PETAL_LEN = 109   // 145 × 0.75
@@ -17,6 +19,93 @@ const PETALS = [
 ]
 
 const PETAL_COLORS = ['#e06c75', '#e5a35a', '#d4b44a', '#56b06c', '#4a9fd4', '#9b7fd4']
+
+function Stars({ count, svgW, svgH }) {
+  // Star data uses fractional positions so they stay proportional on resize
+  const stars = useMemo(() =>
+    Array.from({ length: count }, () => ({
+      xFrac:    Math.random(),
+      yFrac:    Math.random() / 3,          // upper third of viewport
+      r:        Math.random() * 1.2 + 0.4, // 0.4 – 1.6 px radius
+      delay:    Math.random() * 10,         // stagger twinkle starts
+      duration: Math.random() * 5 + 5,     // 5 – 10 s per cycle
+    })),
+  [count]) // only regenerate when star count changes
+
+  return (
+    <g>
+      {stars.map((star, i) => (
+        <g key={i} transform={`translate(${(star.xFrac * svgW).toFixed(1)},${(star.yFrac * svgH).toFixed(1)})`}>
+          {/* Star body */}
+          <circle r={star.r} className="star-body" style={{
+            animationDelay:    `-${star.delay.toFixed(2)}s`,
+            animationDuration: `${star.duration.toFixed(2)}s`,
+          }} />
+          {/* Rays — 4 lines through center = 8-pointed sparkle */}
+          <g className="star-rays" style={{
+            animationDelay:    `-${star.delay.toFixed(2)}s`,
+            animationDuration: `${star.duration.toFixed(2)}s`,
+          }}>
+            {[0, 45, 90, 135].map(angle => (
+              <line key={angle} x1={0} y1={-4} x2={0} y2={4}
+                stroke="white" strokeWidth={0.7} strokeLinecap="round"
+                transform={`rotate(${angle})`}
+              />
+            ))}
+          </g>
+        </g>
+      ))}
+    </g>
+  )
+}
+
+function Birds({ count, svgW, svgH, scale }) {
+  // Bird data uses fractional positions so they stay proportional on resize
+  const birds = useMemo(() =>
+    Array.from({ length: count }, () => ({
+      xFrac:    Math.random(),
+      yFrac:    Math.random() / 3,          // upper third of viewport
+      delay:    Math.random() * 8,          // stagger flap starts
+      duration: Math.random() * 3 + 4,     // 4–7 s per flap cycle
+      sizeVar:  Math.random() * 0.5 + 0.75, // 0.75–1.25 size variation
+    })),
+  [count]) // only regenerate when bird count changes
+
+  return (
+    <g>
+      {birds.map((bird, i) => {
+        const x  = (bird.xFrac * svgW).toFixed(1)
+        const y  = (bird.yFrac * svgH).toFixed(1)
+        const bs = scale * bird.sizeVar
+        const r   = (2.5 * bs).toFixed(2)   // body radius
+        const wx  = (11  * bs).toFixed(2)   // wing tip x distance
+        const wmx = (5.5 * bs).toFixed(2)   // wing mid-base x
+        const wy  = (-7  * bs).toFixed(2)   // wing tip y (above body)
+        const wb  = (1.5 * bs).toFixed(2)   // wing base y (inside body circle)
+        const animStyle = {
+          animationDelay:    `-${bird.delay.toFixed(2)}s`,
+          animationDuration: `${bird.duration.toFixed(2)}s`,
+          transformOrigin:   '0px 0px',
+        }
+        return (
+          <g key={i} transform={`translate(${x}, ${y})`}>
+            {/* Wings rendered before body so the circle covers their base edges */}
+            {/* Left wing */}
+            <g className="bird-wing-left" style={animStyle}>
+              <path d={`M 0 ${wb} L -${wx} ${wy} L -${wmx} ${wb} Z`} fill="black" />
+            </g>
+            {/* Right wing */}
+            <g className="bird-wing-right" style={animStyle}>
+              <path d={`M 0 ${wb} L ${wx} ${wy} L ${wmx} ${wb} Z`} fill="black" />
+            </g>
+            {/* Body on top to cover wing bases */}
+            <circle r={r} fill="black" />
+          </g>
+        )
+      })}
+    </g>
+  )
+}
 
 function ThemeToggle({ isDark, onClick, iconX, iconY, scale = 1 }) {
   const R = Math.max(12, Math.round(20 * scale))
@@ -299,6 +388,24 @@ export default function Flower() {
         }}
       />
 
+      {/* Stars — rendered behind all flower elements, fade with night sky */}
+      <g style={{
+        opacity: isDark ? 1 : 0,
+        transition: 'opacity 0.8s ease-in-out',
+        pointerEvents: 'none',
+      }}>
+        <Stars count={STAR_COUNT} svgW={svgW} svgH={svgH} />
+      </g>
+
+      {/* Birds — rendered behind all flower elements, fade with day sky */}
+      <g style={{
+        opacity: isDark ? 0 : 1,
+        transition: 'opacity 0.8s ease-in-out',
+        pointerEvents: 'none',
+      }}>
+        <Birds count={BIRD_COUNT} svgW={svgW} svgH={svgH} scale={scale} />
+      </g>
+
       {/* Stem */}
       <rect
         x={CX - 9}
@@ -384,7 +491,7 @@ export default function Flower() {
               fontSize={Math.round(15 * scale)} fontWeight="600"
               fill={hintColor}
               style={{ transition: 'fill 0.8s ease-in-out' }}
-            >
+            > Tap/Click
             </text>
             {/* Arrow shaft */}
             <line x1={arrowTailX} y1={iy} x2={arrowTipX} y2={iy}
