@@ -4,7 +4,7 @@ import './Flower.css'
 const DEFAULT_SVG_SIZE = 800
 const CENTER_R = 200
 const PETAL_LEN = 145
-const PETAL_W = 85
+const PETAL_W = 100
 const SEMI_R = PETAL_W / 2
 
 const PETALS = [
@@ -18,15 +18,16 @@ const PETALS = [
 
 const PETAL_COLORS = ['#e06c75', '#e5a35a', '#d4b44a', '#56b06c', '#4a9fd4', '#9b7fd4']
 
-// Arc text path helper (in petal-local space, origin = SVG center)
-function arcPathD(radius, spanDeg) {
-  const startRad = (-90 - spanDeg) * (Math.PI / 180)
-  const endRad   = (-90 + spanDeg) * (Math.PI / 180)
-  const x1 = radius * Math.cos(startRad)
-  const y1 = radius * Math.sin(startRad)
-  const x2 = radius * Math.cos(endRad)
-  const y2 = radius * Math.sin(endRad)
-  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${radius} ${radius} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`
+// Arc text path along the outer petal curve (radius hw, centered at petal tip)
+function petalTipArcD(outerY, hw, spanDeg, reversed = false) {
+  const s = reversed ? 1 : -1
+  const startRad = (-90 + s * spanDeg) * (Math.PI / 180)
+  const endRad   = (-90 - s * spanDeg) * (Math.PI / 180)
+  const x1 = hw * Math.cos(startRad)
+  const y1 = outerY + hw * Math.sin(startRad)
+  const x2 = hw * Math.cos(endRad)
+  const y2 = outerY + hw * Math.sin(endRad)
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${hw} ${hw} 0 0 ${reversed ? 0 : 1} ${x2.toFixed(2)} ${y2.toFixed(2)}`
 }
 
 function splitText(text, maxLen = 22) {
@@ -81,33 +82,25 @@ export default function Flower() {
       `Z`,
     ].join(' ')
 
-    // Arc text at the very tip of the petal
-    const arcR = CENTER_R + PETAL_LEN
+    // Arc text curved to match the outer petal curve (radius hw, centered at petal tip)
     const arcId = `arc-${id}`
 
     // Whether this petal is in the bottom half (text would be upside-down if not handled)
     const isBottom = angle > 90 && angle < 270
 
-    // For bottom petals, reverse the arc so text reads outward
-    const bottomArcD = (() => {
-      const spanDeg = 28
-      const startRad = (-90 + spanDeg) * (Math.PI / 180)
-      const endRad   = (-90 - spanDeg) * (Math.PI / 180)
-      const x1 = arcR * Math.cos(startRad)
-      const y1 = arcR * Math.sin(startRad)
-      const x2 = arcR * Math.cos(endRad)
-      const y2 = arcR * Math.sin(endRad)
-      return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${arcR} ${arcR} 0 0 0 ${x2.toFixed(2)} ${y2.toFixed(2)}`
-    })()
-
-    const topArcD = arcPathD(arcR, 28)
+    const spanDeg = 70
+    const fontSize = 28
+    // Bottom arc center is shifted outward by fontSize to compensate for glyphs
+    // rendering inward on a CCW path, so both arcs place text at the same visual distance
+    const topArcD    = petalTipArcD(outerY + 35, hw, spanDeg)
+    const bottomArcD = petalTipArcD(outerY - fontSize + 35, hw, spanDeg, true)
 
     // Description text lines
     const descLines = splitText(fullDesc)
     const midY = -(CENTER_R + PETAL_LEN / 2)
 
     // Text positioning — negative Y points outward from petal center
-    const shortDescY = -250
+    const shortDescY = -350
     const fullDescStartY = -170
 
     return (
