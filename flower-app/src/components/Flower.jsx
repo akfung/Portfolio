@@ -127,7 +127,7 @@ function ThemeToggle({ isDark, onClick, iconX, iconY, scale = 1 }) {
   })
 
   return (
-    <g transform={`translate(${iconX}, ${iconY})`} onClick={onClick} style={{ cursor: 'pointer' }}>
+    <g transform={`translate(${iconX}, ${iconY})`} onPointerUp={(e) => { e.stopPropagation(); onClick() }} style={{ cursor: 'pointer', touchAction: 'manipulation' }}>
       <defs>
         {/* Cutout circle shifted right creates a left-facing crescent */}
         <mask id="moonMask">
@@ -399,18 +399,11 @@ export default function Flower() {
 
       {/* Day sky background (always underneath) */}
       <rect width={svgW} height={svgH} fill="url(#dayGrad)" />
-      {/* Night sky — sweeps top-to-bottom with a gradient blend at the wipe front. */}
+      {/* Night sky — fades in/out over the day sky */}
       <rect width={svgW} height={svgH} fill="url(#nightGrad)"
         style={{
-          maskImage:          'linear-gradient(to bottom, transparent 0%, transparent 40%, black 60%, black 100%)',
-          maskSize:           '100% 300%',
-          maskRepeat:         'no-repeat',
-          maskPosition:       `0% ${isDark ? '100%' : '0%'}`,
-          WebkitMaskImage:    'linear-gradient(to bottom, transparent 0%, transparent 40%, black 60%, black 100%)',
-          WebkitMaskSize:     '100% 300%',
-          WebkitMaskRepeat:   'no-repeat',
-          WebkitMaskPosition: `0% ${isDark ? '100%' : '0%'}`,
-          transition:         'mask-position 0.8s ease-in-out, -webkit-mask-position 0.8s ease-in-out',
+          opacity:    isDark ? 1 : 0,
+          transition: 'opacity 0.8s ease-in-out',
         }}
       />
 
