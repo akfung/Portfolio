@@ -164,11 +164,10 @@ function ThemeToggle({ isDark, onClick, iconX, iconY, scale = 1 }) {
   )
 }
 
-function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave, isDark, scale, centerR, petalLen, petalW }) {
+function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy, onHover, onLeave, onTap, isTapped, isDark, scale, centerR, petalLen, petalW }) {
   const [hovered, setHovered] = useState(false)  // mouse hover (desktop)
-  const [tapped,  setTapped]  = useState(false)  // tap toggle (mobile)
 
-  const isOut = hovered || tapped
+  const isOut = hovered || isTapped
 
   // Desktop: pointer enter/leave drives hover
   const handlePointerEnter = (e) => {
@@ -179,15 +178,12 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
   const handlePointerLeave = (e) => {
     if (e.pointerType !== 'mouse') return
     setHovered(false)
-    if (!tapped) onLeave()
+    if (!isTapped) onLeave()
   }
-  // Mobile: tap toggles the popped state
-  const handleClick = (e) => {
+  // Mobile: pointerUp is more reliable than onClick for detecting touch taps
+  const handlePointerUp = (e) => {
     if (e.pointerType !== 'touch') return
-    const next = !tapped
-    setTapped(next)
-    if (next) onHover({ label, shortDesc, fullDesc })
-    else onLeave()
+    onTap(angle)
   }
 
   const s = scale
@@ -229,10 +225,10 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
 
       <g
         className="petal-group"
-        style={{ '--pop': `${-popOut}px` }}
+        style={{ '--pop': `${-popOut}px`, touchAction: 'manipulation' }}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
-        onClick={handleClick}
+        onPointerUp={handlePointerUp}
       >
         <path
           d={petalPath}
@@ -332,8 +328,21 @@ export default function Flower() {
   const [svgW, setSvgW] = useState(window.innerWidth)
   const [svgH, setSvgH] = useState(window.innerHeight)
   const [hoveredPetal, setHoveredPetal] = useState(null)
+  const [tappedPetalAngle, setTappedPetalAngle] = useState(null)
   const [isDark, setIsDark] = useState(false)
   const [hasClickedTheme, setHasClickedTheme] = useState(false)
+
+  // Mobile tap: exclusive — tapping a second petal dismisses the first
+  const handleTap = (angle) => {
+    const petal = PETALS.find(p => p.angle === angle)
+    if (tappedPetalAngle === angle) {
+      setTappedPetalAngle(null)
+      setHoveredPetal(null)
+    } else {
+      setTappedPetalAngle(angle)
+      setHoveredPetal({ label: petal.label, shortDesc: petal.shortDesc, fullDesc: petal.fullDesc })
+    }
+  }
 
   const handleThemeClick = () => {
     setIsDark(d => !d)
@@ -469,6 +478,8 @@ export default function Flower() {
           cy={CY}
           onHover={setHoveredPetal}
           onLeave={() => setHoveredPetal(null)}
+          onTap={handleTap}
+          isTapped={tappedPetalAngle === p.angle}
           isDark={isDark}
           scale={scale}
           centerR={CENTER_R}
