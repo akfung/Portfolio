@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.vite
 *.local
 
 # Firebase
@@ -19,7 +20,6 @@ firestore-debug.log
 database-debug.log
 ui-debug.log
 .firebaserc.local
-firebase-debug.log
 
 # Environment variables
 .env
