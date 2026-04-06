@@ -360,8 +360,8 @@ export default function Flower() {
 
   // Scale all geometry proportionally to the smaller viewport dimension
   const SVG_SIZE = Math.min(svgW, svgH)
-  const STEM_WIDTH = 60
   const scale    = SVG_SIZE / DEFAULT_SVG_SIZE
+  const STEM_WIDTH = Math.round(60 * scale)
   const CENTER_R = Math.round(BASE_CENTER_R * scale)
   const PETAL_LEN = Math.round(BASE_PETAL_LEN * scale)
   const PETAL_W   = Math.round(BASE_PETAL_W   * scale)
@@ -447,12 +447,12 @@ export default function Flower() {
 
       {/* Stem */}
       <rect
-        x={CX - 9 - (STEM_WIDTH/3)}
+        x={CX - Math.round(9 * scale) - (STEM_WIDTH/3)}
         y={CY + CENTER_R - 2}
         width={STEM_WIDTH}
         height={svgH - (CY + CENTER_R) - 10}
         fill="#3a7d44"
-        rx={4}
+        rx={Math.round(4 * scale)}
       />
 
 
