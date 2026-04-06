@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import './Flower.css'
+import constellationImg from '../assets/constellation.png'
 
 const DEFAULT_SVG_SIZE = 800
 const STAR_COUNT = 80   // ← adjust to change how many stars appear in the night sky
@@ -10,12 +11,15 @@ const BASE_PETAL_LEN = 109   // 145 × 0.75
 const BASE_PETAL_W   = 75    // 100 × 0.75
 
 const PETALS = [
-  { angle: 0,   label: 'About',    shortDesc: 'Who I am',         petalDesc: 'MLE',         fullDesc: `` },
-  { angle: 60,  label: 'Skills',   shortDesc: 'What I know',      petalDesc: 'What I know',      fullDesc: 'React · Node.js · SVG · CSS · Firebase · Python · TypeScript' },
-  { angle: 120, label: 'Projects', shortDesc: 'What I\'ve built', petalDesc: 'What I\'ve built', fullDesc: 'Dashboards, games, portfolio sites, and open-source tools.' },
-  { angle: 180, label: 'Contact',  shortDesc: 'Say hello',        petalDesc: 'Say hello',        fullDesc: 'hello@example.com  ·  github.com/example' },
-  { angle: 240, label: 'Blog',     shortDesc: 'What I write',     petalDesc: 'What I write',     fullDesc: 'Web dev, design systems, and creative coding deep-dives.' },
-  { angle: 300, label: 'Resume',   shortDesc: 'My background',    petalDesc: 'My background',    fullDesc: 'Available for freelance and full-time opportunities.' },
+  { angle: 0,   label: 'About',    shortDesc: 'AI/ML Engineer',         petalDesc: '',         fullDesc: `Machine Learning Engineer with experience in SQL, Python, and NLP. Extensive history of teamwork and collaboration in enterprise AI inference and training.` },
+  { angle: 60,  label: 'Skills',   shortDesc: 'At least',      petalDesc: 'some of them',      fullDesc: 'Python · SQL · AWS · GCS · Spark · Pytorch · Tensorflow · SKlearn · XGBoost' },
+  { angle: 120, label: 'Education', shortDesc: 'UC Irvine', petalDesc: '', fullDesc: 'MS Biotech · BS Chemistry · BS Immunology' },
+  { angle: 180, label: 'Contact',  shortDesc: 'Open to inquiry',        petalDesc: [
+    { text: 'amoskfung@gmail.com', url: 'mailto:amoskfung@gmail.com' },
+  ],        fullDesc: '',
+ },
+  { angle: 240, label: 'Github',     shortDesc: 'Some projects',     petalDesc: [{ text: 'Github',             url: 'https://github.com/akfung' }],     fullDesc: '' },
+  { angle: 300, label: 'Linkedin',   shortDesc: 'Say Hello!',    petalDesc: [{ text: 'Linkedin',           url: 'https://www.linkedin.com/in/amos-fung-72a265b7/' }],    fullDesc: '' },
 ]
 
 const PETAL_COLORS = ['#e06c75', '#e5a35a', '#d4b44a', '#56b06c', '#4a9fd4', '#9b7fd4']
@@ -210,7 +214,7 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
   const topArcD    = petalTipArcD(outerY + arcOffset, hw, spanDeg)
   const bottomArcD = petalTipArcD(outerY - labelSize + arcOffset, hw, spanDeg, true)
 
-  const descLines      = splitText(petalDesc)
+  const descRuns       = toRuns(petalDesc)
   // Anchor text positions to centerR so they stay hidden inside the
   // circle at rest (translateY +100s) and clear it when popped (translateY -25s)
   const shortDescY     = -(centerR + Math.round(50 * s))
@@ -262,22 +266,25 @@ function Petal({ angle, label, shortDesc, petalDesc, fullDesc, color, id, cx, cy
           {shortDesc}
         </text>
 
-        {descLines.map((line, i) => {
+        {descRuns.map((run, i) => {
           const lineY = fullDescStartY + (i * lineHeight)
-          return (
+          const textEl = (
             <text
-              key={i}
               y={lineY}
               textAnchor="middle"
               dominantBaseline="middle"
               fontSize={Math.round(14 * s)}
-              fill="#000000"
+              fill={run.url ? '#4a9fd4' : '#000000'}
               fontWeight="500"
               transform={isBottom ? `translate(0, ${lineY}) rotate(180) translate(0, ${-lineY})` : ''}
+              style={run.url ? { textDecoration: 'underline', cursor: 'pointer' } : undefined}
             >
-              {line}
+              {run.text}
             </text>
           )
+          return run.url
+            ? <a key={i} href={run.url} target="_blank" rel="noreferrer">{textEl}</a>
+            : <g key={i}>{textEl}</g>
         })}
       </g>
     </g>
@@ -312,6 +319,15 @@ function splitText(text, maxLen = 22) {
   return lines
 }
 
+// Normalise a desc field to [{text, url?}, ...] runs.
+// Pass a plain string for auto word-wrap, or a pre-structured array for
+// explicit lines with optional URL links: [{text: 'Label', url: 'https://...'}]
+function toRuns(desc, maxLen = 22) {
+  if (!desc) return []
+  if (typeof desc === 'string') return splitText(desc, maxLen).map(text => ({ text }))
+  return desc
+}
+
 export default function Flower() {
   const [svgW, setSvgW] = useState(window.innerWidth)
   const [svgH, setSvgH] = useState(window.innerHeight)
@@ -335,6 +351,7 @@ export default function Flower() {
 
   // Scale all geometry proportionally to the smaller viewport dimension
   const SVG_SIZE = Math.min(svgW, svgH)
+  const STEM_WIDTH = 60
   const scale    = SVG_SIZE / DEFAULT_SVG_SIZE
   const CENTER_R = Math.round(BASE_CENTER_R * scale)
   const PETAL_LEN = Math.round(BASE_PETAL_LEN * scale)
@@ -397,6 +414,26 @@ export default function Flower() {
         <Stars count={STAR_COUNT} svgW={svgW} svgH={svgH} />
       </g>
 
+      {/* Constellation portrait — outside the opacity group so mix-blend-mode
+          blends against the actual background layers, not an offscreen buffer.
+          Fade-in is delayed so the sky is dark before the image appears. */}
+      <image
+        href={constellationImg}
+        x={Math.round(15 * scale)}
+        y={Math.round(15 * scale)}
+        width={Math.round(225 * scale)}
+        height={Math.round(280 * scale)}
+        preserveAspectRatio="xMinYMin meet"
+        style={{
+          mixBlendMode: 'screen',
+          opacity: isDark ? 1 : 0,
+          transition: isDark
+            ? 'opacity 0.5s ease-in-out 0.5s'  // wait for sky to darken first
+            : 'opacity 0.3s ease-in-out',
+          pointerEvents: 'none',
+        }}
+      />
+
       {/* Birds — rendered behind all flower elements, fade with day sky */}
       <g style={{
         opacity: isDark ? 0 : 1,
@@ -408,9 +445,9 @@ export default function Flower() {
 
       {/* Stem */}
       <rect
-        x={CX - 9}
+        x={CX - 9 - (STEM_WIDTH/3)}
         y={CY + CENTER_R - 2}
-        width={18}
+        width={STEM_WIDTH}
         height={svgH - (CY + CENTER_R) - 10}
         fill="#3a7d44"
         rx={4}
@@ -456,23 +493,38 @@ export default function Flower() {
         const labelY     = CY - CENTER_R + Math.round(36 * scale)
         const descStartY = labelY + Math.round(32 * scale)
         const lineHeight = Math.round(18 * scale)
-        const descLines  = splitText(hoveredPetal.fullDesc, 33)
+        const fontSize   = Math.round(18 * scale)
+
+        // How many chars fit on one line: ~80% of circle diameter / avg char width
+        // (avg char width ≈ 0.55 × fontSize for system-ui; both scale together so
+        //  charsPerLine ends up scale-independent, which is correct)
+        const charsPerLine = Math.max(10, Math.floor((CENTER_R * 1.6) / (fontSize * 0.55)))
+
+        // How many lines fit before hitting the bottom of the circle (with padding)
+        const maxLines = Math.floor((CENTER_R * 2 - Math.round(88 * scale)) / lineHeight)
+
+        const runs = toRuns(hoveredPetal.fullDesc, charsPerLine).slice(0, maxLines)
         return (
           <g>
-            {descLines.map((line, i) => (
-              <text
-                key={i}
-                x={CX}
-                y={descStartY + i * lineHeight}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={Math.round(18 * scale)}
-                fontWeight="500"
-                fill="#1a1a2e"
-              >
-                {line}
-              </text>
-            ))}
+            {runs.map((run, i) => {
+              const y = descStartY + i * lineHeight
+              const textEl = (
+                <text
+                  x={CX} y={y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={Math.round(18 * scale)}
+                  fontWeight="500"
+                  fill={run.url ? '#4a9fd4' : '#1a1a2e'}
+                  style={run.url ? { textDecoration: 'underline', cursor: 'pointer' } : undefined}
+                >
+                  {run.text}
+                </text>
+              )
+              return run.url
+                ? <a key={i} href={run.url} target="_blank" rel="noreferrer">{textEl}</a>
+                : <g key={i}>{textEl}</g>
+            })}
           </g>
         )
       })()}
